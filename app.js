@@ -20,5 +20,5 @@ app.use(routes);
  
 app.listen(PORT, () => {
     console.log(`listening on port ${PORT}`);
-    console.log('this is working')
+    console.log('this is working!')
 });
