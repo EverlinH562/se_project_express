@@ -1,45 +1,45 @@
-const clothingItemSchema = require('../models/clothingItem')
+const clothingItemSchema = require('../models/clothingItem');
+const { HTTP_STATUS, ERROR_MESSAGES } = require('../utils/constants');
 
 const createItem = (req, res) => {
-    console.log(req)
-    console.log(req.body)
+  const { name, weather, imageURL, owner  } = req.body;
 
-    const {name, weather, imageURL} =  req.body;
-
-    clothingItemSchema.create({name, weather, imageURL}).then((item) =>{
-        console.log(item);
-        res.send({data:item})
-    }).catch((e) => {
-        res.status(500).send({message: 'Error from CreateItem', e})
-    })
+  clothingItemSchema.create({name, weather, imageURL, owner})
+    .then((item) => res.status(HTTP_STATUS.CREATED).send({ data: item }))
+    .catch((e) => {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({ message: ERROR_MESSAGES.CREATE_ITEM_ERROR, error: e.message });
+    });
 };
 
 const getItems = (req, res) => {
-    clothingItemSchema.find({}).then((items) => res.status(200).send(items))
+  clothingItemSchema.find({})
+    .then((items) => res.status(HTTP_STATUS.OK).send(items))
     .catch((e) => {
-        res.status(500).send({message:"Error from getItems", e})
-    })
-}
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({ message: ERROR_MESSAGES.GET_ITEMS_ERROR, error: e.message });
+    });
+};
 
 const updateItem = (req, res) => {
-    const {itemId} = req.params;
-    const {imageURL} = req.body;
-    
-    clothingItemSchema.findByIdAndUpdate(itemId, {$set: {imageURL}}).orFail().then((item) > res.status(200).send({data:item}))
+  const { itemId } = req.params;
+  const { imageURL } = req.body;
+
+  clothingItemSchema.findByIdAndUpdate(itemId, { $set: { imageURL } }, { new: true })
+    .orFail()
+    .then((item) => res.status(HTTP_STATUS.OK).send({ data: item }))
     .catch((e) => {
-        res.status(500).send({message: "Error from updateItem", e})
-    })
-}
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({ message: ERROR_MESSAGES.UPDATE_ITEM_ERROR, error: e.message });
+    });
+};
 
 const deleteItem = (req, res) => {
-    const { itemId } = req.params;
-    console.log(itemId);
-    clothingItemSchema.findByIdAndDelete(itemId).orFail().then((item) => res.status(204).send({}))
-    .catch((e) => {
-        res.status(500).send({message: "Error from deleteItem", e})
-    })
-}
+  const { itemId } = req.params;
 
-module.exports = {
-    createItem, getItems, updateItem, deleteItem
-}
+  clothingItemSchema.findByIdAndDelete(itemId)
+    .orFail()
+    .then(() => res.status(HTTP_STATUS.NO_CONTENT).send())
+    .catch((e) => {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({ message: ERROR_MESSAGES.DELETE_ITEM_ERROR, error: e.message });
+    });
+};
+
+module.exports = { createItem, getItems, updateItem, deleteItem };

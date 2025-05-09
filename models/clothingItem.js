@@ -1,16 +1,44 @@
+const validator = require('validator');
+
 const mongoose = require("mongoose");
 
-const clothingItemSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  weather: { type: String, required: true },
-  imageURL: {
-    type: String,
-    required: true,
-    validate: {
-      validator: (v) => validator.isURL(v),
-      message: "Link is not Valid",
-    },
-  },
-});
+const { Schema } = mongoose;
 
-module.exports = mongoose.model("clothingItems", clothingItemSchema);
+const clothingItemSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    weather: { type: String, required: true },
+    imageURL: {
+      type: String,
+      required: true,
+      validate: {
+        validator: (v) => validator.isURL(v),
+        message: "Link is not Valid",
+      },
+    },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    }, 
+    likes: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now }, 
+  },
+  {
+    timestamps: true, 
+  }
+);
+
+
+const ClothingItem = mongoose.model("ClothingItem", clothingItemSchema);
+
+module.exports = ClothingItem;
+
+const userSchema = new Schema({
+    name: { type: String, required: true },
+    avatar: { type: String },
+  });
+  
+  const User = mongoose.model('User', userSchema);
+  
+  module.exports = User;
