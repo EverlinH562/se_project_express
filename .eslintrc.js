@@ -1,4 +1,3 @@
-const _id = "hello";
 module.exports = {
     env: {
       browser: true,
