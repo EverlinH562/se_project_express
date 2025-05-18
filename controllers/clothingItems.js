@@ -1,5 +1,6 @@
 const { HTTP_STATUS, ERROR_MESSAGES } = require("../utils/constants");
 const clothingItemSchema = require("../models/clothingItem");
+const ClothingItem = require('../models/clothingItem');
 
 const createItem = (req, res) => {
     const { name, weather, imageUrl } = req.body; 
@@ -29,30 +30,44 @@ const getItems = (req, res) =>
         .send({ message: ERROR_MESSAGES.GET_ITEMS_ERROR })
     );
 
-const deleteItem = (req, res) =>
-  clothingItemSchema
-    .findByIdAndDelete(req.params.itemId)
-    .orFail()
-    .then((item) =>
-      res
-        .status(HTTP_STATUS.OK)
-        .send({ message: "Item deleted successfully", data: item })
-    )
-    .catch((err) => {
-      if (err.name === "DocumentNotFoundError") {
-        return res
-          .status(HTTP_STATUS.NOT_FOUND)
-          .send({ message: ERROR_MESSAGES.ITEM_NOT_FOUND });
-      }
-      if (err.name === "CastError") {
-        return res
-          .status(HTTP_STATUS.BAD_REQUEST)
-          .send({ message: ERROR_MESSAGES.INVALID_ITEM_ID });
-      }
-      return res
-        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .send({ message: ERROR_MESSAGES.INTERNAL_ERROR });
-    });
+    const deleteItem = (req, res) => {
+        const userId = req.user._id;
+      
+        clothingItemSchema
+          .findById(req.params.itemId)
+          .orFail(() => new Error('ItemNotFound'))
+          .then((item) => {
+            if (item.owner.toString() !== userId) {
+              return res
+                .status(HTTP_STATUS.FORBIDDEN)
+                .send({ message: 'You do not have permission to delete this item.' });
+            }
+      
+            return clothingItemSchema
+              .findByIdAndDelete(req.params.itemId)
+              .then((deletedItem) =>
+                res
+                  .status(HTTP_STATUS.OK)
+                  .send({ message: 'Item deleted successfully', data: deletedItem })
+              );
+          })
+          .catch((err) => {
+            if (err.message === 'ItemNotFound') {
+              return res
+                .status(HTTP_STATUS.NOT_FOUND)
+                .send({ message: ERROR_MESSAGES.ITEM_NOT_FOUND });
+            }
+            if (err.name === 'CastError') {
+              return res
+                .status(HTTP_STATUS.BAD_REQUEST)
+                .send({ message: ERROR_MESSAGES.INVALID_ITEM_ID });
+            }
+      
+            return res
+              .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+              .send({ message: ERROR_MESSAGES.INTERNAL_ERROR });
+          });
+      };
 
 const likeItem = (req, res) =>
   clothingItemSchema
