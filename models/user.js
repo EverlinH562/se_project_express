@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const validator = require('validator');
 const bcrypt = require('bcrypt');
+
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
@@ -19,11 +19,11 @@ const userSchema = new Schema({
     password: {
       type: String,
       required: true,
-      select: false, // hide password in queries
+      select: false, 
     },
   });
 
-userSchema.statics.findUserByCredentials = async function (email, password) {
+  userSchema.statics.findUserByCredentials = async function findUserByCredentials(email, password) {
   const user = await this.findOne({ email }).select('+password');
   if (!user) {
     throw new Error('Incorrect email or password');

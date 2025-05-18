@@ -32,46 +32,53 @@ const createUser = (req, res) => {
 };
 
 const getUser = (req, res) => {
-  const { userId } = req.params;
+    const { userId } = req.params;
+  
+    User.findById(userId)
+      .then((user) => {
+        if (!user) {
+          return res.status(HTTP_STATUS.NOT_FOUND).send({ message: ERROR_MESSAGES.USER_NOT_FOUND });
+        }
+        return res.status(HTTP_STATUS.OK).send(user);
+      })
+      .catch((err) => {
+        if (err.name === 'CastError') {
+          return res.status(HTTP_STATUS.BAD_REQUEST).send({ message: ERROR_MESSAGES.INVALID_USER_ID });
+        }
+        return res
+          .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+          .send({ message: ERROR_MESSAGES.INTERNAL_ERROR, error: err.message });
+      });
+  };
 
-  User.findById(userId)
-    .orFail()
-    .then((user) => res.status(HTTP_STATUS.OK).send(user))
-    .catch((err) => {
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(HTTP_STATUS.NOT_FOUND).send({ message: ERROR_MESSAGES.USER_NOT_FOUND });
+  const registerUser = async (req, res) => {
+    try {
+      const { email, password } = req.body;
+  
+      if (!email || !password) {
+        return res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ message: 'Email and password are required.' });
       }
-      if (err.name === 'CastError') {
-        return res.status(HTTP_STATUS.BAD_REQUEST).send({ message: ERROR_MESSAGES.INVALID_USER_ID });
+  
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = await User.create({ email, password: hashedPassword });
+  
+      return res
+        .status(HTTP_STATUS.CREATED)
+        .json({ message: 'User created successfully', userId: newUser._id });
+    } catch (error) {
+      if (error.code === 11000) {
+        return res
+          .status(HTTP_STATUS.CONFLICT)
+          .json({ message: 'Email already in use.' });
       }
+  
       return res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .send({ message: ERROR_MESSAGES.INTERNAL_ERROR, error: err.message });
-    });
-};
-
-const registerUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Email and password are required.' });
+        .json({ message: 'Server error', error: error.message });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ email, password: hashedPassword });
-
-    res.status(HTTP_STATUS.CREATED).json({ message: 'User created successfully', userId: newUser._id });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(HTTP_STATUS.CONFLICT).json({ message: 'Email already in use.' });
-    }
-
-    res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .json({ message: 'Server error', error: error.message });
-  }
-};
+  };
 
 const login = async (req, res) => {
     const { email, password } = req.body;
@@ -136,4 +143,5 @@ const login = async (req, res) => {
     registerUser,
     login,
     updateUserProfile, 
+    getUser
   };

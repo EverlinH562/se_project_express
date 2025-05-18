@@ -11,15 +11,16 @@ module.exports = (req, res, next) => {
       .send({ message: 'Authorization required' });
   }
 
-  const token = authorization.replace('Bearer ', '');
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).send({ message: 'Authorization required' });
+  }
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    req.user = payload; 
-    next(); 
+    req.user = payload;
+    return next(); 
   } catch (err) {
-    return res
-      .status(HTTP_STATUS.UNAUTHORIZED)
-      .send({ message: 'Invalid or expired token' });
+    return res.status(401).send({ message: 'Invalid token' });
   }
 };

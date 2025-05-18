@@ -1,6 +1,6 @@
 const { HTTP_STATUS, ERROR_MESSAGES } = require("../utils/constants");
 const clothingItemSchema = require("../models/clothingItem");
-const ClothingItem = require('../models/clothingItem');
+
 
 const createItem = (req, res) => {
     const { name, weather, imageUrl } = req.body; 
