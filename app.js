@@ -24,9 +24,14 @@ app.use(express.json());
 app.post("/signin", login);
 app.post("/signup", registerUser);
 
+
+app.use((req, res, next) => {
+  req.user = { _id: '5d8b8592978f8bd833ca8133' };
+  next();
+});
+
 app.use(auth); 
 app.use("/items", require("./routes/clothingItems"));
-
 app.use(routes);
 
 app.listen(PORT, () => {
