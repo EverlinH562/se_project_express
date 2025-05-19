@@ -4,10 +4,6 @@ const {
   updateUserProfile,
 } = require("../controllers/users");
 
-router.get("/test", (req, res) => {
-  res.send("User router is working!");
-});
-
 router.get("/me", getCurrentUser);
 
 router.patch("/me", updateUserProfile);

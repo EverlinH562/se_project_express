@@ -3,27 +3,33 @@ const bcrypt = require('bcrypt');
 
 const { Schema } = mongoose;
 
-const userSchema = new Schema({
-    name: {
-      type: String,
-      required: true,
-    },
-    avatar: {
-      type: String,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    password: {
-      type: String,
-      required: true,
-      select: false, 
-    },
-  });
+const urlRegex = /^(https?:\/\/)(www\.)?([\w\-]+\.)+[\w\-]{2,}(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?#?$/i;
 
-  userSchema.statics.findUserByCredentials = async function findUserByCredentials(email, password) {
+const userSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+    minlength: 2,
+    maxlength: 30,
+  },
+  avatar: {
+    type: String,
+    required: true,
+    match: [urlRegex, 'Please enter a valid URL for the avatar'],
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+    select: false,
+  },
+});
+
+userSchema.statics.findUserByCredentials = async function findUserByCredentials(email, password) {
   const user = await this.findOne({ email }).select('+password');
   if (!user) {
     throw new Error('Incorrect email or password');
@@ -36,7 +42,6 @@ const userSchema = new Schema({
 
   return user;
 };
-
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;
