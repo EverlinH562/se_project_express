@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 const { Schema } = mongoose;
 
-const urlRegex = /^(https?:\/\/)(www\.)?([\w\-]+\.)+[\w\-]{2,}(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?#?$/i;
+const urlRegex = /^(https?:\/\/)(www\.)?([\w-]+\.)+[\w-]{2,}(\/[\w-._~:/?#[\]@!$&'()*+,;=]*)?#?$/i;
 
 const userSchema = new Schema({
   name: {

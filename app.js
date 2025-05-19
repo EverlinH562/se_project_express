@@ -26,6 +26,7 @@ app.post("/signup", registerUser);
 
 app.use(auth); 
 app.use("/items", require("./routes/clothingItems"));
+
 app.use(routes);
 
 app.listen(PORT, () => {
