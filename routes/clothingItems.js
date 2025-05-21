@@ -1,7 +1,4 @@
 const express = require('express');
-
-const router = express.Router();
-
 const {
   createItem,
   getItems,
@@ -10,14 +7,17 @@ const {
   dislikeItem,
 } = require('../controllers/clothingItems');
 
-router.post('/', createItem);
+const publicRoutes = express.Router();
+const protectedRoutes = express.Router();
 
-router.get('/', getItems);
+publicRoutes.get('/', getItems);
 
-router.put('/:itemId/likes', likeItem);
+protectedRoutes.post('/', createItem);
+protectedRoutes.delete('/:itemId', deleteItem);
+protectedRoutes.put('/:itemId/likes', likeItem);
+protectedRoutes.delete('/:itemId/likes', dislikeItem);
 
-router.delete('/:itemId/likes', dislikeItem); 
-
-router.delete('/:itemId', deleteItem);
-
-module.exports = router;
+module.exports = {
+  publicRoutes,
+  protectedRoutes,
+};

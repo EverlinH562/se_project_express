@@ -5,33 +5,40 @@ const { JWT_SECRET } = require('../utils/config');
 const { HTTP_STATUS, ERROR_MESSAGES } = require('../utils/constants');
 
 const registerUser = async (req, res) => {
-  try {
-    const { name, avatar, email, password } = req.body;
-
-    if (!email || !password) {
+    try {
+      const { name, avatar, email, password } = req.body;
+  
+      if (!email || !password) {
+        return res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ message: 'Email and password are required.' });
+      }
+  
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = await User.create({ name, avatar, email, password: hashedPassword });
+  
       return res
-        .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ message: 'Email and password are required.' });
-    }
+        .status(HTTP_STATUS.CREATED)
+        .json({ message: 'User created successfully', userId: newUser._id });
+  
+    } catch (error) {
+      if (error.code === 11000) {
+        return res
+          .status(HTTP_STATUS.CONFLICT)
+          .json({ message: 'Email already in use.' });
+      }
+  
+      if (error.name === 'ValidationError') {
+        return res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ message: 'Invalid user data.', details: error.message });
+      }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ name, avatar, email, password: hashedPassword });
-
-    return res
-      .status(HTTP_STATUS.CREATED)
-      .json({ message: 'User created successfully', userId: newUser._id });
-  } catch (error) {
-    if (error.code === 11000) {
       return res
-        .status(HTTP_STATUS.CONFLICT)
-        .json({ message: 'Email already in use.' });
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ message: ERROR_MESSAGES.INTERNAL_ERROR, error: error.message });
     }
-
-    return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .json({ message: ERROR_MESSAGES.INTERNAL_ERROR, error: error.message });
-  }
-};
+  };
 
 const login = async (req, res) => {
   const { email, password } = req.body;
